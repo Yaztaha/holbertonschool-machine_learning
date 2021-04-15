@@ -1,1 +1,1 @@
-# holbertonschool-machine_learning
+# Holbertonschool-machine_learning
