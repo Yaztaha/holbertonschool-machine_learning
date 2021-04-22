@@ -5,6 +5,7 @@
 def poly_derivative(poly):
     """ Derivative of polynomial function """
 
+    derivative = []
     if poly is None or len(poly) == 0:
         return None
 
@@ -18,7 +19,6 @@ def poly_derivative(poly):
         if not isinstance(element, (int, float)):
             return None
 
-    derivative = []
     for i in range(1, len(poly)):
         derivative.append(i * poly[i])
     return derivative
