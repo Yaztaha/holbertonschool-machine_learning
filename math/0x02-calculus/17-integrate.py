@@ -1,19 +1,31 @@
 #!/usr/bin/env python3
-""" Integration """
+"""poli integral"""
 
 
 def poly_integral(poly, C=0):
-    """method of new coeffiecients for an integral"""
-    if poly == [] or type(poly) is not list or type(C) is not int:
+    """poli integral"""
+    arr = [C]
+    arr2 = [0]
+    if type(poly) != list:
         return None
-    if len(poly) == 1:
+    if poly is None or len(poly) == 0 or poly == []:
+        return None
+    if(type(C) is not int):
+        return None
+    if(poly == [0]):
         return [C]
-    result = [C]
-
-    for i in range(len(poly)):
-        integ = poly[i] / (i+1)
-        if inte.is_integer():
-            integ = int(r)
-            result.append(integ)
-
-        return result
+    for elem in poly:
+        if(type(elem) is not int and type(elem) is not float):
+            return None
+    if type(poly) is list:
+        for item in poly:
+            arr2.append(item)
+        for i in range(1, len(arr2)):
+            aux = arr2[i]/i
+            if (aux).is_integer():
+                arr.append(int(arr2[i]/i))
+            else:
+                arr.append(arr2[i]/i)
+        return arr
+    else:
+        return None
