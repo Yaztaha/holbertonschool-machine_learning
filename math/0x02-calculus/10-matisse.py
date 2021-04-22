@@ -5,20 +5,13 @@
 def poly_derivative(poly):
     """ Derivative of polynomial function """
 
-    derivative = []
-    if poly is None or len(poly) == 0:
+    if not isinstance(poly, list) or len(poly) == 0:
         return None
-
-    if len(poly) == 1:
-        return None
-
-    if type(poly) is not list:
-        return None
-
-    for element in poly:
-        if not isinstance(element, (int, float)):
-            return None
-
-    for i in range(1, len(poly)):
-        derivative.append(i * poly[i])
-    return derivative
+    elif len(poly) == 1:
+        return [0]
+    poly_deriv = []
+    for coef in range(len(poly)):
+        if coef == 0:
+            continue
+        poly_deriv.append(coef * poly[coef])
+    return poly_deriv
