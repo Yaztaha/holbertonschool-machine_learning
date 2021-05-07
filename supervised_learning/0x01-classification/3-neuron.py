@@ -41,5 +41,5 @@ class Neuron:
 
     def cost(self, Y, A):
         """ logistic regression cost method """
-        Cost_Sum = np.sum(Y * np.log(A) + (1 - Y) * np.log(1.0000001 - A))
-        return -(1 / A.shape[1]) * Cost_Sum
+        Cost_Sum = - np.sum(Y * np.log(A) + (1 - Y) * np.log(1.0000001 - A))
+        return (1 / A.shape[1]) * Cost_Sum
