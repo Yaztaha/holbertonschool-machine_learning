@@ -81,19 +81,20 @@ class Neuron:
         xaxis = []
         yaxis = []
 
-        for i in range(iterations):
-            self.forward_prop(X)
-            self.gradient_descent(X, Y, self.__A, alpha)
+        for i in range(iterations + 1):
+            A = self.forward_prop(X)
+            self.gradient_descent(X, Y, A, alpha)
+            cost = self.cost(Y, A)
 
-            if i % step == 0 or i == iterations:
-                xaxis.append(i)
-                yaxis.append(self.cost(Y, self.__A))
             if verbose is True:
-                print("Cost after {} iterations: {}".
-                      format(i, self.cost(Y, self.__A)))
+                if i % step == 0:
+                    print("Cost after {} iterations: {}".format(i, cost))
+                    xaxis.append(i)
+                    yaxis.append(cost)
+                
         if graph is True:
-            plt.plot(xaxis, yaxis, 'b-')
-            plt.xlabel('iterations')
+            plt.plot(xaxis, yaxis, 'tab:blue', '-')
+            plt.xlabel('iteration')
             plt.ylabel('cost')
             plt.title('Training Cost')
             plt.show()
