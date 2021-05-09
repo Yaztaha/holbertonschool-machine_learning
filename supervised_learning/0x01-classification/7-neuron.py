@@ -91,7 +91,7 @@ class Neuron:
                     print("Cost after {} iterations: {}".format(i, cost))
                     xaxis.append(i)
                     yaxis.append(cost)
-                
+
         if graph is True:
             plt.plot(xaxis, yaxis, 'tab:blue', '-')
             plt.xlabel('iteration')
