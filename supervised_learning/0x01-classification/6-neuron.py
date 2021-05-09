@@ -72,6 +72,6 @@ class Neuron:
             raise ValueError('alpha must be a positive integre')
 
         for i in range(iterations):
-            A = self.forward_prop(X)
-            self.gradient_descent(X, Y, A, alpha)
+            self.__A = self.forward_prop(X)
+            self.gradient_descent(X, Y, self.__A, alpha)
         return self.evaluate(X, Y)
