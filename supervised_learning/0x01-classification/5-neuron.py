@@ -53,5 +53,9 @@ class Neuron:
 
     def gradient_descent(self, X, Y, A, alpha=0.5):
         """ gradient descent method """
-        self.__W = (self.__W - alpha * np.dot(X, (A - Y).T).T / X.shape[1])
-        self.__b = self.__b - alpha * (A - Y).mean()
+        dZ = A - Y
+        dW = np.dot(dZ, X.T) / A.shape[1]
+        db = np.sum(dZ) / A.shape[1]
+
+        self.__W = self.__W - alpha * dW
+        self.__b = self.__b - alpha * db
