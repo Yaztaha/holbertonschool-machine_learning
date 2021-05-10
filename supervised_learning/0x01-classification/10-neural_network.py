@@ -48,12 +48,17 @@ class NeuralNetwork:
     def A2(self):
         return self.__A2
 
+    def sigmoid(self, x):
+        """ sigmoid method """
+        sigmoid = 1 / (1 + np.exp(-x))
+        return sigmoid
+
     def forward_prop(self, X):
         """ forward propagation method """
         z1 = np.matmul(self.__W1, X) + self.__b1
-        z2 = np.matmul(self.__W2, X) + self.__b2
-
-        self.__A1 = 1 / (1 + np.exp(-z1))
-        self.__A2 = 1 / (1 + np.exp(-z2))
-
+        A1 = self.sigmoid(z1)
+        self.__A1 = A1
+        z2 = np.matmul(self.__W2, self.__A1) + self.__b2
+        A2 = self.sigmoid(z2)
+        self.__A2 = A2
         return self.__A1, self.__A2
