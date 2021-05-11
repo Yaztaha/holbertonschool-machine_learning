@@ -7,5 +7,7 @@ def one_hot_decode(one_hot):
     """ one hot decoding method """
     if type(one_hot) != np.ndarray:
         return None
+    if len(one_hot.shape) != 2:
+        return None
 
-    return(np.argmax(one_hot, axis=0))
+    return np.argmax(one_hot, axis=0)
