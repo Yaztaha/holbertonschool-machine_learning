@@ -11,6 +11,6 @@ def f1_score(confusion):
     """ function that return f1 score """
     _sntv = sensitivity(confusion)
     _prcs = precision(confusion)
-    F1_score = 2 * ((_precision * _sensitivity) / (_precision + _sensitivity))
+    F1_score = 2 * ((_prcs * _sntv) / (_prcs + _sntv))
 
     return F1_score
