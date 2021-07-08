@@ -116,7 +116,7 @@ class NST:
 
         return gram
 
-     def generate_features(self):
+    def generate_features(self):
         """ generate features method """
         vgg19 = tf.keras.applications.vgg19
 
