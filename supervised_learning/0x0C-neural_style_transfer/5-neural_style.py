@@ -6,14 +6,13 @@ import tensorflow as tf
 
 
 class NST:
-    "" "NST class """
+    """  NST class  """
     style_layers = ['block1_conv1', 'block2_conv1',
-                    'block3_conv1', 'block4_conv1',
-                    'block5_conv1']
+                    'block3_conv1', 'block4_conv1', 'block5_conv1']
     content_layer = 'block5_conv2'
 
     def __init__(self, style_image, content_image, alpha=1e4, beta=1):
-        """ constructor method """
+        """ costructor method """
 
         if type(style_image) is not np.ndarray \
                 or len(style_image.shape) != 3 \
@@ -43,11 +42,12 @@ class NST:
         self.beta = beta
 
         self.load_model()
+
         self.generate_features()
 
     @staticmethod
     def scale_image(image):
-        """ scale image method """
+        """ scale image method  """
         if type(image) is not np.ndarray \
                 or len(image.shape) != 3 \
                 or image.shape[2] != 3:
@@ -74,7 +74,7 @@ class NST:
         return image
 
     def load_model(self):
-        """ load data method """
+        """ loads the model method """
         vgg_pre = tf.keras.applications.vgg19.VGG19(include_top=False,
                                                     weights='imagenet')
 
@@ -97,7 +97,7 @@ class NST:
 
     @staticmethod
     def gram_matrix(input_layer):
-        """ gram_matrix method """
+        """ gram matrix method  """
         e = 'input_layer must be a tensor of rank 4'
         if not isinstance(input_layer, (tf.Tensor, tf.Variable)) \
                 or len(input_layer.shape) != 4:
@@ -108,11 +108,11 @@ class NST:
         n = tf.shape(a)[0]
         gram = tf.matmul(a, a, transpose_a=True)
         gram = tf.expand_dims(gram, axis=0)
-
         return gram / tf.cast(n, tf.float32)
 
     def generate_features(self):
-        """ generate features method """
+        """ feature generate method """
+
         vgg19 = tf.keras.applications.vgg19
 
         content_image_input = vgg19.preprocess_input(self.content_image * 255)
@@ -121,14 +121,13 @@ class NST:
         content_img_output = self.model(content_image_input)
         style_img_output = self.model(style_image_input)
 
-        content_features = content_img_output[-1]
+        list_gram = []
+        for out in style_img_output[:-1]:
+            list_gram = list_gram + [self.gram_matrix(out)]
 
-        style_features = []
-        for output in style_img_output[:-1]:
-            style_features = style_features + [self.gram_matrix(output)]
+        self.gram_style_features = list_gram
 
-        self.gram_style_features = style_features
-        self.content_feature = content_features
+        self.content_feature = content_img_output[-1]
 
     def layer_style_cost(self, style_output, gram_target):
         """ layer style method """
@@ -145,12 +144,10 @@ class NST:
 
         gram_style = self.gram_matrix(style_output)
 
-        layer_style_cost = tf.reduce_mean(tf.square(gram_style - gram_target))
-
-        return layer_style_cost
+        return tf.reduce_mean(tf.square(gram_style - gram_target))
 
     def style_cost(self, style_outputs):
-        """ style cost method """
+        """ style cost method  """
         my_length = len(self.style_layers)
         err = \
             'style_outputs must be a list with a length of {}'. \
