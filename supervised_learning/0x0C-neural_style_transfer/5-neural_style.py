@@ -149,7 +149,7 @@ class NST:
 
         return layer_style_cost
 
-     def style_cost(self, style_outputs):
+    def style_cost(self, style_outputs):
         """ style cost method """
         my_length = len(self.style_layers)
         err = \
