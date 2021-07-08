@@ -92,7 +92,7 @@ class NST:
         content_outputs = vgg.get_layer(self.content_layer).output
         model_outputs = style_outputs + [content_outputs]
 
-        return self.model = tf.keras.models.Model(vgg.input, model_outputs)
+        return tf.keras.models.Model(vgg.input, model_outputs)
 
     @staticmethod
     def gram_matrix(input_layer):
