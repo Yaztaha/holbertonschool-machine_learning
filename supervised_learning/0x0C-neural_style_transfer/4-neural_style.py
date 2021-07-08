@@ -105,9 +105,8 @@ class NST:
 
         channels = int(input_layer.shape[-1])
         a = tf.reshape(input_layer, [-1, channels])
-        n = tf.cast(tf.shape(a)[0], tf.float32)
+        n = tf.shape(a)[0]
         gram = tf.matmul(a, a, transpose_a=True)
-        gram = gram / n
         gram = tf.expand_dims(gram, axis=0)
 
         return gram / tf.cast(n, tf.float32)
