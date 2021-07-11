@@ -27,4 +27,4 @@ def dropout_forward_prop(X, weights, L, keep_prob):
             output_A = output_A / keep_prob
             cache['D{}'.format(i + 1)] = dropout
         cache[key_cache] = output_A
-    return 
+    return
