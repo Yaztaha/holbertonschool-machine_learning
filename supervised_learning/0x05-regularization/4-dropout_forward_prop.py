@@ -7,24 +7,24 @@ import numpy as np
 def dropout_forward_prop(X, weights, L, keep_prob):
     """ forward propagation with dropout """
     cache = {'A0': X}
+
     for i in range(L):
-        key_w = 'W' + str(i + 1)
-        key_b = 'b' + str(i + 1)
-        key_cache = 'A' + str(i + 1)
-        key_cache_last = 'A' + str(i)
-        output_Z = np.matmul(weights[key_w], cache[
-            key_cache_last]) + weights[key_b]
+        W_key = "W{}".format(i + 1)
+        b_key = "b{}".format(i + 1)
+        A_key_prev = "A{}".format(i)
+        A_key_forw = "A{}".format(i + 1)
+        D_key = "D{}".format(i + 1)
+
+        Z = np.matmul(weights[W_key], cache[A_key_prev]) \
+            + weights[b_key]
+        drop = np.random.binomial(1, keep_prob, size=Z.shape)
+
         if i == L - 1:
-            t = np.exp(output_Z)
-            output_A = np.exp(output_Z) / np.sum(t, axis=0,
-                                                 keepdims=True)
+            t = np.exp(Z)
+            cache[A_key_forw] = (t / np.sum(t, axis=0, keepdims=True))
         else:
-            output_A = ((np.exp(output_Z) - np.exp(-output_Z)) / (
-                np.exp(output_Z) + np.exp(-output_Z)))
-            rand = np.random.rand(output_A.shape[0], output_A.shape[1])
-            dropout = (rand < keep_prob).astype(int)
-            output_A = np.multiply(output_A, dropout)
-            output_A = output_A / keep_prob
-            cache['D{}'.format(i + 1)] = dropout
-        cache[key_cache] = output_A
-    return
+            cache[A_key_forw] = np.tanh(Z)
+            cache[D_key] = drop
+            cache[A_key_forw] = (cache[A_key_forw] * cache[D_key]) / keep_prob
+
+    return cache
