@@ -1,0 +1,215 @@
+#!/usr/bin/env python3
+"""
+Uses the Yolo v3 algorithm to perform object detection
+"""
+
+
+import tensorflow.keras as K
+import numpy as np
+
+
+class Yolo:
+    """
+    Uses the Yolo v3 algorithm to perform object detection
+    """
+    def __init__(self, model_path, classes_path, class_t, nms_t, anchors):
+        """
+        Class constructor
+        """
+        self.model = K.models.load_model(model_path)
+
+        with open(classes_path, 'r') as f:
+            self.class_names = [line.strip() for line in f]
+
+        self.class_t = class_t
+        self.nms_t = nms_t
+        self.anchors = anchors
+
+    def sigmoid(self, x):
+        """
+        Sigmoid function
+        """
+        return (1 / (1 + np.exp(-x)))
+
+    def process_outputs(self, outputs, image_size):
+        """
+        Returns a tuple of (boxes, box_confidences, box_class_probs)
+        """
+        # Image’s original size
+        image_height, image_width = image_size[0], image_size[1]
+
+        boxes = []
+        box_confidences = []
+        box_class_probs = []
+
+        for output in outputs:
+            # list with processed boundary boxes for each output
+            boxes.append(output[..., 0:4])
+            # list with box confidences for each output
+            box_confidences.append(self.sigmoid(output[..., 4, np.newaxis]))
+            # list with box's class probabilities for each output
+            box_class_probs.append(self.sigmoid(output[..., 5:]))
+
+        for count, box in enumerate(boxes):
+            grid_height, grid_width, anchor_boxes, _ = box.shape
+
+            c = np.zeros((grid_height, grid_width, anchor_boxes), dtype=int)
+
+            idx_y = np.arange(grid_height)
+            idx_y = idx_y.reshape(grid_height, 1, 1)
+            idx_x = np.arange(grid_width)
+            idx_x = idx_x.reshape(1, grid_width, 1)
+            # cx, cy: cell's top left corner of the box
+            cy = c + idx_y
+            cx = c + idx_x
+
+            # The network predicts 4 coordinates for each bounding box
+            t_x = (box[..., 0])
+            t_y = (box[..., 1])
+
+            # normalize the above variables
+            t_x_n = self.sigmoid(t_x)
+            t_y_n = self.sigmoid(t_y)
+
+            # width and height
+            t_w = (box[..., 2])
+            t_h = (box[..., 3])
+
+            """
+            If the cell is offset from the top left corner of the
+            image by (cx, cy) and the bounding box prior has width and
+            height pw, ph, then the predictions correspond to
+            """
+
+            # center
+            bx = t_x_n + cx
+            by = t_y_n + cy
+
+            # normalization
+            bx /= grid_width
+            by /= grid_height
+
+            # priors (anchors) width and height
+            pw = self.anchors[count, :, 0]
+            ph = self.anchors[count, :, 1]
+
+            # scale to anchors box dimensions
+            bw = pw * np.exp(t_w)
+            bh = ph * np.exp(t_h)
+
+            # normalize to model input size
+            input_width = self.model.input.shape[1].value
+            input_height = self.model.input.shape[2].value
+            bw /= input_width
+            bh /= input_height
+
+            # Corners of bounding box
+            x1 = bx - bw / 2
+            y1 = by - bh / 2
+            x2 = x1 + bw
+            y2 = y1 + bh
+
+            # scale to image original size
+            box[..., 0] = x1 * image_width
+            box[..., 1] = y1 * image_height
+            box[..., 2] = x2 * image_width
+            box[..., 3] = y2 * image_height
+
+        return boxes, box_confidences, box_class_probs
+
+    def filter_boxes(self, boxes, box_confidences, box_class_probs):
+        """ filter boxes method """
+        scores = []
+        for i in range(len(boxes)):
+            scores.append(box_class_probs[i] * box_confidences[i])
+
+        class_idx = [np.argmax(elem, -1) for elem in scores]
+        class_idx = [elem.reshape(-1) for elem in class_idx]
+        class_idx = np.concatenate(class_idx)
+
+        class_score = [np.max(elem, axis=-1) for elem in scores]
+        class_score = [elem.reshape(-1) for elem in class_score]
+        class_score = np.concatenate(class_score)
+
+        filter_box = [elem.reshape(-1, 4) for elem in boxes]
+        filter_box = np.concatenate(filter_box)
+
+        filter = np.where(class_score > self.class_t)
+
+        box_classes = class_idx[filter]
+        box_scores = class_score[filter]
+        filter_boxes = filter_box[filter]
+
+        return (filter_boxes, box_classes, box_scores)
+
+    def non_max_suppression(self, filtered_boxes, box_classes, box_scores):
+        """ non-max supression method """
+        boxes, classes, scores = [], [], []
+
+        for klasses in set(box_classes):
+            index = np.where(box_classes == klasses)
+
+            klass = box_classes[index]
+            bscores = box_scores[index]
+            bxs = filtered_boxes[index]
+
+            x1, x2 = bxs[:, 0], bxs[:, 2]
+            y1, y2 = bxs[:, 1], bxs[:, 3]
+
+            a = (x2 - x1 + 1) * (y2 - y1 + 1)
+            index = bscores.argsort()[::-1]
+            keep = []
+
+            while index.size > 0:
+                i = index[0]
+                j = index[1:]
+                keep.append(i)
+
+                yy1 = np.maximum(y1[i], y1[j])
+                xx1 = np.maximum(x1[i], x1[j])
+                yy2 = np.minimum(y2[i], y2[j])
+                xx2 = np.minimum(x2[i], x2[j])
+
+                w = np.maximum(0.0, xx2 - xx1 + 1)
+                h = np.maximum(0.0, yy2 - yy1 + 1)
+
+                box_area = (w * h)
+                overlap = box_area / (a[i] + a[j] - box_area)
+                index = index[(np.where(overlap <= self.nms_t)[0]) + 1]
+
+            keep = np.array(keep)
+
+            boxes.append(bxs[keep])
+            classes.append(klass[keep])
+            scores.append(bscores[keep])
+
+        filtered_boxes = np.concatenate(boxes)
+        box_classes = np.concatenate(classes)
+        box_scores = np.concatenate(scores)
+
+        return (filtered_boxes, box_classes, box_scores)
+
+    @staticmethod
+    def load_images(folder_path):
+        """ load image method """
+        image_paths = glob.glob(folder_path + "/*")
+        images = [cv2.imread(img) for img in image_paths]
+        return (images, image_paths)
+
+    def preprocess_images(self, images):
+        """ preprocess images method """
+        rsized_images = []
+        input_w = self.model.input.shape[1].value
+        input_h = self.model.input.shape[2].value
+
+        ishapes = [img.shape[:2] for img in images]
+        img_shapes = np.stack(ishapes, axis=0)
+
+        for image in images:
+            rsized_img = cv2.resize(image, (input_w, input_h),
+                                    interpolation=cv2.INTER_CUBIC)
+            rscaled_img = rsized_img / 255
+            rsized_images.append(rscaled_img)
+
+        rsized_images = np.stack(rsized_images, axis=0)
+        return (rsized_images, img_shapes)
