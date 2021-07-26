@@ -18,20 +18,14 @@ class MultiNormal:
 
     def pdf(self, x):
         """ pdf function """
-        if not(isinstance(x, np.ndarray)):
+        d = self.cov.shape[0]
+        if not isinstance(x, np.ndarray):
             raise TypeError("x must be a numpy.ndarray")
-        cov = self.cov
-        if (len(x.shape) is not 2 or x.shape[1] is not 1
-                or x.shape[0] is not cov.shape[0]):
-            raise ValueError("x must have the shape ({d}, 1)".
-                             format(cov.shape[0]))
-        else:
-            cov = self.cov
-            inv_cov = np.linalg.inv(cov)
-            mean = self.mean
-            D = cov.shape[0]
-            det_cov = np.linalg.det(cov)
-            den = np.sqrt(np.power((2 * np.pi), D) * det_cov)
-            y = np.matmul((x - mean).T, inv_cov)
-            pdf = (1 / den) * np.exp(-1 * np.matmul(y, (x - mean)) / 2)
-            return pdf.reshape(-1)[0]
+        if (len(x.shape) != 2 or x.shape[1] != 1 or x.shape[0] != d):
+            raise ValueError("x must have the shape ({}, 1)".format(d))
+
+        x_hat = x - self.mean
+        pdf = (1 / (np.sqrt((2 * np.pi)**d * np.linalg.det(self.cov)))
+               * np.exp(-(np.linalg.solve(self.cov, x_hat).T.dot(x_hat)) / 2))
+
+        return float(pdf)
