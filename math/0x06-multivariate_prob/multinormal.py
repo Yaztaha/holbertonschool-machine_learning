@@ -20,12 +20,16 @@ class MultiNormal:
         """ pdf function """
         if not isinstance(x, np.ndarray):
             raise TypeError("x must be a numpy.ndarray")
-        d = self.cov.shape[0]
+        if (len(x.shape) != 2):
+            raise ValueError("x mush have the shape ({}, 1)".
+                             format(self.cov.shape[0]))
+        if (x.shape[1] != 1 or x.shape[0] != self.cov.shape[0]):
+            raise ValueError("x mush have the shape ({}, 1)".
+                             format(self.cov.shape[0]))
+            m = x - self.mean
+            det = np.linalg.det(self.cov)
+            pdf_det = 1. / (np.sqrt((2 * pn.pi)**self.cov.shape[0] * det))
+            pdf_inv = (np.exp(-np.linalg.solve(self.cov, m).T.dot(m)) / 2)
 
-        if len(x.shape) != 2 or x.shape != (d, 1):
-            raise ValueError("x must have the shape ({}, 1)".format(d))
-        det = np.linalg.det(self.cov)
-        b = (((2 * np.pi)**d) * det)**(.5)
-        m = (x - self.mean)
-        i = np.linalg.inv(self.cov)
-        return ((1/b) * np.exp((-1/2) * m.T @ i @ m))[0][0]
+            pdf = pdf_det * pdf_inv
+            return pdf
