@@ -23,7 +23,7 @@ class MultiNormal:
         cov = self.cov
         if (len(x.shape) is not 2 or x.shape[1] is not 1
                 or x.shape[0] is not cov.shape[0]):
-            raise ValueError("x must have the shape ({}, 1)".
+            raise ValueError("x must have the shape ({d}, 1)".
                              format(cov.shape[0]))
         else:
             cov = self.cov
