@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 """ Clusters centroids init """
-
-
 import numpy as np
 
 
@@ -13,6 +11,6 @@ def initialize(X, k):
     if not isinstance(k, int) or k <= 0 or k > n:
         return None
     cen = np.random.uniform(low=np.min(X, axis=0),
-                           high=np.max(X, axis=0),
-                           size=(k, d))
+                            high=np.max(X, axis=0),
+                            size=(k, d))
     return cen
