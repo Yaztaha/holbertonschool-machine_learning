@@ -5,34 +5,47 @@ import numpy as np
 
 def viterbi(Observation, Emission, Transition, Initial):
     """ """
-    try:
-        T = Observation.shape[0]
-        N = Transition.shape[0]
-        omega = np.zeros((T, N))
-        omega[0, :] = np.log(Initial.T * Emission[:, Observation[0]])
-        prev = np.zeros((T - 1, N))
-        for t in range(1, T):
-            for j in range(N):
-                a1 = omega[t-1]
-                a2 = np.log(Transition[:, j])
-                a3 = np.log(Emission[j, Observation[t]])
-                probability = (omega[t - 1] + np.log(Transition[:, j]) +
-                               np.log(Emission[j, Observation[t]]))
-                prev[t - 1, j] = np.argmax(probability)
-                omega[t, j] = np.max(probability)
-        S = np.zeros(T)
-        last_state = np.argmax(omega[T - 1, :])
-        S[0] = last_state
-        backtrack_index = 1
-        for i in range(T - 2, -1, -1):
-            S[backtrack_index] = prev[i, int(last_state)]
-            last_state = prev[i, int(last_state)]
-            backtrack_index += 1
-        S = np.flip(S, axis=0)
-        result = []
-        for s in S:
-            result.append(int(s))
-        P = np.max(np.exp(omega[-1:, :]))
-        return (P, result)
-    except Exception:
+    T = Observation.shape[0]
+    N, M = Emission.shape
+
+    if ((len(Observation.shape)) != 1) or (
+            not isinstance(Observation, np.ndarray)):
         return None, None
+    if ((len(Emission.shape)) != 2) or (not isinstance(Emission, np.ndarray)):
+        return None, None
+    N1_T, N2_T = Transition.shape
+    if ((len(Transition.shape)) != 2) or (N != N1_T) or (N != N2_T):
+        return None, None
+    if (N1_T != N2_T) or (not isinstance(Transition, np.ndarray)):
+        return None, None
+    probability = np.ones((1, N1_T))
+    if not (np.isclose((np.sum(Transition, axis=1)), probability)).all():
+        return None, None
+    if ((len(Initial.shape)) != 2) or (not isinstance(Initial, np.ndarray)):
+        return None, None
+    if (N != Initial.shape[0]):
+        return None, None
+
+    viterbi = np.zeros((N, T))
+    backpointer = np.zeros((N, T))
+
+    # $ \pi_q\beta_,x_1 $
+    viterbi[:, 0] = Initial.T * Emission[:, Observation[0]]
+    backpointer[:, 0] = 0
+
+    # $\\sum_{q'}^{}\alpha_{q',t-1}A_{q',q}B_{q,x_t}\$
+    for t in range(1, T):
+        for s in range(N):
+            first_part = viterbi[:, t - 1] * Transition[:, s]
+            second_part = Emission[s, Observation[t]]
+            viterbi[s, t] = np.max(first_part * second_part)
+            backpointer[s, t] = np.argmax(first_part * second_part)
+
+    bestpathprob = [0 for i in range(T)]
+    bestpathprob[-1] = np.argmax(viterbi[:, T - 1])
+    for t in range(T - 1, 0, -1):
+        bestpathprob[t - 1] = int(backpointer[bestpathprob[t], t])
+
+    P = np.max(viterbi[:, -1])
+
+    return bestpathprob, P
