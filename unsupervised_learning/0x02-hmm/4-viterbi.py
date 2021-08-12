@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-""" """
+""" Viterbi algo """
 import numpy as np
 
 
 def viterbi(Observation, Emission, Transition, Initial):
-    """ """
+    """ Viterbi algo function """
     T = Observation.shape[0]
     N, M = Emission.shape
 
