@@ -44,7 +44,6 @@ def autoencoder(input_dims, hidden_layers, latent_dims):
     outputs = decoder(outputs)
     auto = K.models.Model(inputs=encoder_inputs, outputs=outputs)
 
-
     def compute_loss(inputs, outputs):
         """cost function"""
         loss = K.backend.binary_crossentropy(inputs, outputs)
